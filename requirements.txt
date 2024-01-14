@@ -1,0 +1,1 @@
+schnapsen @ git+https://github.com/intelligent-systems-course/schnapsen@main
