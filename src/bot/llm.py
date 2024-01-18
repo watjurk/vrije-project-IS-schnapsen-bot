@@ -2,9 +2,11 @@ from typing import Optional
 from schnapsen.game import Bot, PlayerPerspective, Move, GamePhase
 from schnapsen.deck import Card
 
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain_community.llms.ollama import Ollama
+import inquirer
+
+# from langchain.callbacks.manager import CallbackManager
+# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+# from langchain_community.llms.ollama import Ollama
 
 
 class LLMBot(Bot):
@@ -24,13 +26,33 @@ class LLMBot(Bot):
         perspective: PlayerPerspective,
         leader_move: Optional[Move],
     ) -> Move:
-        print(perspective_to_llm_representation(perspective))
-        exit(0)
-        return perspective.valid_moves()[0]
+        print()
+        print()
+        print("GAME STATE:")
+        print()
+        print(perspective_to_llm_representation(perspective, leader_move))
+        print()
+        print()
+
+        MOVE_QUESTION_ID = "move"
+        valid_moves_as_string = [move_to_llm_representation(move) for move in perspective.valid_moves()]
+        choose_move_questions = inquirer.List(
+            MOVE_QUESTION_ID,
+            message="CHOOSE THE LLM'S MOVE",
+            choices=valid_moves_as_string,
+        )
+
+        answers = inquirer.prompt([choose_move_questions])
+        assert answers is not None, "inquirer.prompt returned None as answers."
+
+        move_answer = answers[MOVE_QUESTION_ID]
+        move_index = valid_moves_as_string.index(move_answer)
+        return perspective.valid_moves()[move_index]
 
 
 def perspective_to_llm_representation(
     perspective: PlayerPerspective,
+    leader_move: Optional[Move],
 ) -> str:
     representation = ""
 
@@ -50,6 +72,13 @@ def perspective_to_llm_representation(
     for card in perspective.get_hand().cards:
         your_cards += card_to_llm_representation(card) + " "
     representation += f"Your cards: {seen_cards}\n"
+
+    leader_move_representation = ""
+    if leader_move == None:
+        leader_move_representation = "You are the leader"
+    else:
+        leader_move_representation = f"Your opponent is the leader. Your opponent made this move: {move_to_llm_representation(leader_move)}"
+    representation += f"{leader_move_representation}\n"
 
     valid_moves = ""
     for move in perspective.valid_moves():
