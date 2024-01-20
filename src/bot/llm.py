@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Optional, List, Tuple
+from enum import Enum, auto
 from schnapsen.game import Bot, PlayerPerspective, Move, GamePhase
 from schnapsen.deck import Card
 
@@ -28,28 +29,65 @@ class LLMBot(Bot):
     ) -> Move:
         print()
         print()
-        print("THE GAME STATE FOR LLM:")
-        print()
+        print("---------- THE GAME VIEW FOR LLM -----")
         print(perspective_to_llm_representation(perspective, leader_move))
+        print("---------- THE GAME VIEW FOR LLM -----")
         print()
         print()
 
-        MOVE_QUESTION_ID = "move"
-        valid_moves_as_string = [
-            move_to_llm_representation(move) for move in perspective.valid_moves()
-        ]
-        choose_move_questions = inquirer.List(
-            MOVE_QUESTION_ID,
-            message="CHOOSE THE LLM'S MOVE",
-            choices=valid_moves_as_string,
-        )
+        while True:
+            llm_output = input("PROVIDE LLM OUTPUT: ")
+            ok, move, paring_err = parse_llm_output(
+                perspective.valid_moves(), llm_output
+            )
+            if ok:
+                break
 
-        answers = inquirer.prompt([choose_move_questions])
-        assert answers is not None, "inquirer.prompt returned None as answers."
+            print(paring_err)
+            print()
 
-        move_answer = answers[MOVE_QUESTION_ID]
-        move_index = valid_moves_as_string.index(move_answer)
-        return perspective.valid_moves()[move_index]
+        assert move is not None
+        return move
+
+        # MOVE_QUESTION_ID = "move"
+        # valid_moves_as_string = [
+        #     move_to_llm_representation(move) for move in perspective.valid_moves()
+        # ]
+        # choose_move_questions = inquirer.List(
+        #     MOVE_QUESTION_ID,
+        #     message="CHOOSE THE LLM'S MOVE",
+        #     choices=valid_moves_as_string,
+        # )
+
+        # answers = inquirer.prompt([choose_move_questions])
+        # assert answers is not None, "inquirer.prompt returned None as answers."
+
+        # move_answer = answers[MOVE_QUESTION_ID]
+        # move_index = valid_moves_as_string.index(move_answer)
+        # return perspective.valid_moves()[move_index]
+
+
+class ParseLLMOutputError(Enum):
+    MORE_THAN_ONE_MOVE_MATCHES = auto()
+    NO_MOVE_MATCHES = auto()
+
+
+def parse_llm_output(
+    valid_moves: List[Move], llm_output: str
+) -> Tuple[bool, Optional[Move], Optional[ParseLLMOutputError]]:
+    matching_moves = []
+
+    for move in valid_moves:
+        matching_moves.append(move_to_llm_representation(move) in llm_output)
+
+    if matching_moves.count(True) == 0:
+        return False, None, ParseLLMOutputError.NO_MOVE_MATCHES
+
+    if matching_moves.count(True) > 1:
+        return False, None, ParseLLMOutputError.MORE_THAN_ONE_MOVE_MATCHES
+
+    matching_move_index = matching_moves.index(True)
+    return True, valid_moves[matching_move_index], None
 
 
 def perspective_to_llm_representation(
@@ -105,7 +143,7 @@ def perspective_to_llm_representation(
             history_representation += "You won this trick.\n"
         else:
             history_representation += "Your opponent won this trick.\n"
-    
+
     representation += "GAME HISTORY:\n"
     representation += f"{history_representation[1:]}\n"
 
