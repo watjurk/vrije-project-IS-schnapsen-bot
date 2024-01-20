@@ -28,14 +28,16 @@ class LLMBot(Bot):
     ) -> Move:
         print()
         print()
-        print("GAME STATE:")
+        print("THE GAME STATE FOR LLM:")
         print()
         print(perspective_to_llm_representation(perspective, leader_move))
         print()
         print()
 
         MOVE_QUESTION_ID = "move"
-        valid_moves_as_string = [move_to_llm_representation(move) for move in perspective.valid_moves()]
+        valid_moves_as_string = [
+            move_to_llm_representation(move) for move in perspective.valid_moves()
+        ]
         choose_move_questions = inquirer.List(
             MOVE_QUESTION_ID,
             message="CHOOSE THE LLM'S MOVE",
@@ -56,12 +58,68 @@ def perspective_to_llm_representation(
 ) -> str:
     representation = ""
 
+    history_representation = ""
+    my_previous_score = 0
+    game_history = perspective.get_game_history()
+    for i, (perspective, trick) in enumerate(game_history):
+        if trick is None:
+            continue
+
+        try:
+            my_next_score = game_history[i + 1][0].get_my_score().direct_points
+        except:
+            my_next_score = 0
+
+        did_i_win_the_trick = False
+        if my_next_score > my_previous_score:
+            did_i_win_the_trick = True
+        my_previous_score = my_next_score
+
+        history_representation += "\n"
+        if trick.is_trump_exchange():
+            history_representation += "TRUMP EXCHANGE"
+            continue
+
+        if perspective.am_i_leader():
+            my_move = trick.leader_move
+            opponent_move = trick.follower_move
+            history_representation += "You were the leader.\n"
+            history_representation += (
+                f"You played: {move_to_llm_representation(my_move)}\n"
+            )
+            history_representation += (
+                f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
+            )
+        else:
+            my_move = trick.follower_move
+            opponent_move = trick.leader_move
+            history_representation += "Your opponent was the leader.\n"
+            history_representation += (
+                f"You played: {move_to_llm_representation(my_move)}\n"
+            )
+            history_representation += (
+                f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
+            )
+
+        if did_i_win_the_trick:
+            history_representation += "You won this trick.\n"
+        else:
+            history_representation += "Your opponent won this trick.\n"
+    
+    representation += "GAME HISTORY:\n"
+    representation += f"{history_representation[1:]}\n"
+
+    representation += "GAME STATE:\n"
     game_phase = ""
     if perspective.get_phase() == GamePhase.ONE:
         game_phase = "STAGE1"
     else:
         game_phase = "STAGE2"
     representation += f"The game stage: {game_phase}\n"
+
+    representation += f"The trump suit is: {str(perspective.get_trump_suit())}\n"
+    if perspective.get_trump_card() is not None:
+        representation += f"The trump card is: {card_to_llm_representation(perspective.get_trump_card())}\n"
 
     seen_cards = ""
     for card in perspective.seen_cards(None):
@@ -95,7 +153,7 @@ def card_to_llm_representation(card: Card) -> str:
 def move_to_llm_representation(move: Move) -> str:
     if move.is_marriage():
         move = move.as_marriage()
-        return f"MARRIAGE: ({card_to_llm_representation(move.cards[0]), card_to_llm_representation(move.cards[1])})"
+        return f"MARRIAGE: ({card_to_llm_representation(move.cards[0])}, {card_to_llm_representation(move.cards[1])})"
 
     if move.is_trump_exchange():
         move = move.as_trump_exchange()
