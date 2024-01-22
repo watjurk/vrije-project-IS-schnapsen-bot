@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 from enum import Enum, auto
-from schnapsen.game import Bot, PlayerPerspective, Move, GamePhase
+from schnapsen.game import Bot, PlayerPerspective, Move, GamePhase, Trick
 from schnapsen.deck import Card
 
 from . import llm_engine
@@ -32,6 +32,7 @@ class LLMBot(Bot):
         game_state = perspective_to_llm_representation(perspective, leader_move)
 
         while True:
+            print(game_state)
             llm_output = llm_engine.generate(game_state)
 
             print()
@@ -97,9 +98,55 @@ def perspective_to_llm_representation(
 ) -> str:
     representation = ""
 
+    history_representation = history_to_llm_representation(
+        perspective.get_game_history()
+    )
+    representation += "GAME HISTORY:\n"
+    representation += f"{history_representation}\n"
+
+    representation += "GAME STATE:\n"
+    game_phase = ""
+    if perspective.get_phase() == GamePhase.ONE:
+        game_phase = "STAGE1"
+    else:
+        game_phase = "STAGE2"
+    representation += f"The game stage: {game_phase}\n"
+
+    representation += f"The trump suit is: {str(perspective.get_trump_suit())}\n"
+    if perspective.get_trump_card() is not None:
+        representation += f"The trump card is: {card_to_llm_representation(perspective.get_trump_card())}\n"
+
+    seen_cards = ""
+    for card in perspective.seen_cards(None):
+        seen_cards += card_to_llm_representation(card) + " "
+    representation += f"The cards which have been seen: {seen_cards}\n"
+
+    your_cards = ""
+    for card in perspective.get_hand().cards:
+        your_cards += card_to_llm_representation(card) + " "
+    representation += f"Your cards: {seen_cards}\n"
+
+    leader_move_representation = ""
+    if leader_move == None:
+        leader_move_representation = "You are the leader"
+    else:
+        leader_move_representation = f"Your opponent is the leader. Your opponent made this move: {move_to_llm_representation(leader_move)}"
+    representation += f"{leader_move_representation}\n"
+
+    valid_moves = ""
+    for move in perspective.valid_moves():
+        valid_moves += move_to_llm_representation(move) + " "
+    representation += f"An array of valid moves you can take: {valid_moves}"
+
+    return representation
+
+
+def history_to_llm_representation(
+    game_history: list[tuple[PlayerPerspective, Optional[Trick]]]
+) -> str:
     history_representation = ""
     my_previous_score = 0
-    game_history = perspective.get_game_history()
+
     for i, (perspective, trick) in enumerate(game_history):
         if trick is None:
             continue
@@ -145,44 +192,7 @@ def perspective_to_llm_representation(
         else:
             history_representation += "Your opponent won this trick.\n"
 
-    representation += "GAME HISTORY:\n"
-    representation += f"{history_representation[1:]}\n"
-
-    representation += "GAME STATE:\n"
-    game_phase = ""
-    if perspective.get_phase() == GamePhase.ONE:
-        game_phase = "STAGE1"
-    else:
-        game_phase = "STAGE2"
-    representation += f"The game stage: {game_phase}\n"
-
-    representation += f"The trump suit is: {str(perspective.get_trump_suit())}\n"
-    if perspective.get_trump_card() is not None:
-        representation += f"The trump card is: {card_to_llm_representation(perspective.get_trump_card())}\n"
-
-    seen_cards = ""
-    for card in perspective.seen_cards(None):
-        seen_cards += card_to_llm_representation(card) + " "
-    representation += f"The cards which have been seen: {seen_cards}\n"
-
-    your_cards = ""
-    for card in perspective.get_hand().cards:
-        your_cards += card_to_llm_representation(card) + " "
-    representation += f"Your cards: {seen_cards}\n"
-
-    leader_move_representation = ""
-    if leader_move == None:
-        leader_move_representation = "You are the leader"
-    else:
-        leader_move_representation = f"Your opponent is the leader. Your opponent made this move: {move_to_llm_representation(leader_move)}"
-    representation += f"{leader_move_representation}\n"
-
-    valid_moves = ""
-    for move in perspective.valid_moves():
-        valid_moves += move_to_llm_representation(move) + " "
-    representation += f"An array of valid moves you can take: {valid_moves}"
-
-    return representation
+    return history_representation[1:]
 
 
 def card_to_llm_representation(card: Card) -> str:

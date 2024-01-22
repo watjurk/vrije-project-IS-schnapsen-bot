@@ -12,9 +12,9 @@ with open(prompt_path, "r") as file:
 
 
 # read the expert prompt from a file
-expert_prompt_path = "/Users/julespadova/Documents/Intelligent System Project/lmm shcnapsen/bot with plain text/expert_prompt.txt"
-with open(expert_prompt_path, "r") as file:
-    expert_prompt = file.read()
+# expert_prompt_path = "/Users/julespadova/Documents/Intelligent System Project/lmm shcnapsen/bot with plain text/expert_prompt.txt"
+# with open(expert_prompt_path, "r") as file:
+#     expert_prompt = file.read()
 
 
 def expert(history):
