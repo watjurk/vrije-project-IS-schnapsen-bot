@@ -1,4 +1,4 @@
-from .llm import LLMBot
+from .llm.llm import LLMBot
 
 __all__ = ["LLMBot"]
 

@@ -2,14 +2,8 @@ from typing import Optional, List, Tuple
 from enum import Enum, auto
 from schnapsen.game import Bot, PlayerPerspective, Move, GamePhase
 from schnapsen.deck import Card
-import subprocess
-import json
 
-import inquirer
-
-# from langchain.callbacks.manager import CallbackManager
-# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-# from langchain_community.llms.ollama import Ollama
+from . import llm_engine
 
 
 class LLMBot(Bot):
@@ -20,14 +14,6 @@ class LLMBot(Bot):
 
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name)
-
-        print("staring llm subprocess")
-
-        # Start the LLM bot as a subprocess
-        self.llm_bot_process = subprocess.Popen(["python", "/Users/julespadova/Documents/Intelligent System Project/lmm shcnapsen/bot with plain text/vrije-project-IS-shnapsen-bot/src/bot/llm_engine.py"],
-                                        stdin=subprocess.PIPE,
-                                        stdout=subprocess.PIPE,
-                                        text=True)
 
     def get_move(
         self,
@@ -42,32 +28,23 @@ class LLMBot(Bot):
         print()
         print()
 
-        print("Send game state to LLM bot")
-        # Send game state to LLM bot
+        # print("Send game state to LLM bot")
         game_state = perspective_to_llm_representation(perspective, leader_move)
-        game_state += "\nEND_OF_GAME_STATE\n"
-        self.llm_bot_process.stdin.write(game_state + "\n")
-        self.llm_bot_process.stdin.flush()
 
         while True:
-            #not needed as we use an input/output method
-            #llm_output = input("PROVIDE LLM OUTPUT: ")
+            llm_output = llm_engine.generate(game_state)
 
-            # Read move from LLM bot
-            print("Read move from LLM bot")
-            llm_output = self.llm_bot_process.stdout.readline().strip()
-            print("LLM OUTPUT")
+            print()
             print(llm_output)
-            print("LLM OUTPUT")
+            print()
 
-
-            ok, move, paring_err = parse_llm_output(
+            ok, move, parsing_err = parse_llm_output(
                 perspective.valid_moves(), llm_output
             )
             if ok:
                 break
 
-            print(paring_err)
+            print(parsing_err)
             print()
 
         assert move is not None
