@@ -1,15 +1,12 @@
 import json
+from typing import Optional
 import requests
 from os import path
 
-model = "openhermes"  # Update this for your model
+MODEL_TYPE = "openhermes"  # Update this for your model
+
 CURRENT_FOLDER = path.dirname(path.abspath(__file__))
-
-# Read the master prompt from a file
-prompt_path = path.join(CURRENT_FOLDER, "prompt.txt")
-with open(prompt_path, "r") as file:
-    master_prompt = file.read()
-
+PLAYING_PROMPT = open(path.join(CURRENT_FOLDER, "playing_prompt.txt")).read()
 
 # read the expert prompt from a file
 # expert_prompt_path = "/Users/julespadova/Documents/Intelligent System Project/lmm shcnapsen/bot with plain text/expert_prompt.txt"
@@ -22,7 +19,7 @@ def expert(history):
     r = requests.post(
         "http://localhost:11434/api/generate",
         json={
-            "model": model,
+            "model": MODEL_TYPE,
             "prompt": full_expert_prompt,
             "context": [],
         },
@@ -42,12 +39,15 @@ def expert(history):
             return output
 
 
-def generate(game_state: str) -> str:
-    full_prompt = master_prompt + "\n\n" + game_state
+def generate(game_representation: str, feedback: Optional[str] = None) -> str:
+    full_prompt = f"{PLAYING_PROMPT}\n\n{game_representation}"
+    if feedback is not None:
+        full_prompt += f"\n\n{feedback}"
+
     r = requests.post(
         "http://localhost:11434/api/generate",
         json={
-            "model": model,
+            "model": MODEL_TYPE,
             "prompt": full_prompt,
             "context": [],
         },

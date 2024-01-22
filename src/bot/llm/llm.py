@@ -20,58 +20,61 @@ class LLMBot(Bot):
         perspective: PlayerPerspective,
         leader_move: Optional[Move],
     ) -> Move:
-        print()
-        print()
-        print("---------- THE GAME VIEW FOR LLM -----")
-        print(perspective_to_llm_representation(perspective, leader_move))
-        print("---------- THE GAME VIEW FOR LLM -----")
-        print()
-        print()
+        # print()
+        # print()
+        # print("---------- THE GAME VIEW FOR LLM -----")
+        # print(perspective_to_llm_representation(perspective, leader_move))
+        # print("---------- THE GAME VIEW FOR LLM -----")
+        # print()
+        # print()
 
-        # print("Send game state to LLM bot")
-        game_state = perspective_to_llm_representation(perspective, leader_move)
+        game_representation = perspective_to_llm_representation(
+            perspective, leader_move
+        )
 
+        llm_output = llm_engine.generate(game_representation)
         while True:
-            print(game_state)
-            llm_output = llm_engine.generate(game_state)
-
             print()
             print(llm_output)
             print()
 
-            ok, move, parsing_err = parse_llm_output(
+            ok, move, parse_err = parse_llm_output(
                 perspective.valid_moves(), llm_output
             )
             if ok:
                 break
 
-            print(parsing_err)
             print()
+            print("There was a parsing error:", parse_err)
+            print()
+
+            llm_output = llm_engine.generate(
+                game_representation, feedback=parse_err_to_llm_feedback(parse_err)
+            )
 
         assert move is not None
         return move
-
-        # MOVE_QUESTION_ID = "move"
-        # valid_moves_as_string = [
-        #     move_to_llm_representation(move) for move in perspective.valid_moves()
-        # ]
-        # choose_move_questions = inquirer.List(
-        #     MOVE_QUESTION_ID,
-        #     message="CHOOSE THE LLM'S MOVE",
-        #     choices=valid_moves_as_string,
-        # )
-
-        # answers = inquirer.prompt([choose_move_questions])
-        # assert answers is not None, "inquirer.prompt returned None as answers."
-
-        # move_answer = answers[MOVE_QUESTION_ID]
-        # move_index = valid_moves_as_string.index(move_answer)
-        # return perspective.valid_moves()[move_index]
 
 
 class ParseLLMOutputError(Enum):
     MORE_THAN_ONE_MOVE_MATCHES = auto()
     NO_MOVE_MATCHES = auto()
+
+
+def parse_err_to_llm_feedback(parse_err: ParseLLMOutputError) -> str:
+    feedback_representation = "FEEDBACK: DURING YOUR LAST OUTPUT:"
+
+    if parse_err == ParseLLMOutputError.NO_MOVE_MATCHES:
+        feedback_representation += (
+            "You have provided an incorrect move, please provide a correct one."
+        )
+
+    if parse_err == ParseLLMOutputError.MORE_THAN_ONE_MOVE_MATCHES:
+        feedback_representation += (
+            "You have provided more than one move, please provide a only one move."
+        )
+
+    return feedback_representation
 
 
 def parse_llm_output(
