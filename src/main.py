@@ -9,6 +9,7 @@ import bot.llm
 engine = schnapsen.game.SchnapsenGamePlayEngine()
 
 random_bot = schnapsen.bots.RandBot(random.Random(time.time()), "random_bot")
+
 llm_bot = bot.LLMBot("llm_bot")
 
 game_rand = random.Random(time.time())
