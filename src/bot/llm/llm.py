@@ -34,9 +34,9 @@ class LLMBot(Bot):
 
         llm_output = llm_engine.generate(game_representation)
         while True:
-            print()
+            # print()
             print(llm_output)
-            print()
+            # print()
 
             ok, move, parse_err = parse_llm_output(
                 perspective.valid_moves(), llm_output
@@ -44,9 +44,9 @@ class LLMBot(Bot):
             if ok:
                 break
 
-            print()
+            # print()
             print("There was a parsing error:", parse_err)
-            print()
+            # print()
 
             llm_output = llm_engine.generate(
                 game_representation, feedback=parse_err_to_llm_feedback(parse_err)

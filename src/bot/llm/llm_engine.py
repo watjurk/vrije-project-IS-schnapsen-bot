@@ -8,11 +8,6 @@ MODEL_TYPE = "openhermes"  # Update this for your model
 CURRENT_FOLDER = path.dirname(path.abspath(__file__))
 PLAYING_PROMPT = open(path.join(CURRENT_FOLDER, "playing_prompt.txt")).read()
 
-# read the expert prompt from a file
-# expert_prompt_path = "/Users/julespadova/Documents/Intelligent System Project/lmm shcnapsen/bot with plain text/expert_prompt.txt"
-# with open(expert_prompt_path, "r") as file:
-#     expert_prompt = file.read()
-
 
 def expert(history):
     full_expert_prompt = expert_prompt + history
