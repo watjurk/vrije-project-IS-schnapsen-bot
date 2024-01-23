@@ -26,7 +26,7 @@ def expert(history):
         stream=True,
     )
     r.raise_for_status()
-
+    output = ""
     for line in r.iter_lines():
         body = json.loads(line)
         response_part = body.get("response", "")
@@ -41,7 +41,15 @@ def expert(history):
 
 
 def generate(game_representation: str, feedback: Optional[str] = None) -> str:
-    full_prompt = f"{PLAYING_PROMPT}\n\n{game_representation}"
+
+    # LLM expert 
+    history = game_representation
+
+    expert_advice = expert(history)
+
+
+    # LLM player
+    full_prompt = f"{PLAYING_PROMPT}\n\n{game_representation}\n\nExpert Advice:\n{expert_advice}"
     if feedback is not None:
         full_prompt += f"\n\n{feedback}"
 

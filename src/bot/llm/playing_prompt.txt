@@ -40,3 +40,5 @@ Additional Notes:
 Strategy Consideration: Use your knowledge of Schnapsen strategy to select the best move from the valid options.
 Focus on Moves: Do not output commentary or explanations. Your response should strictly be the move you choose to play.
 ONLY PLAY MOVES WHICH ARE IN THE "An array of valid moves you can take:"
+
+You will be given the history of the game, the current possible moves, and an advice from an expert, follow the advice
