@@ -28,9 +28,8 @@ class LLMBot(Bot):
         # print()
         # print()
 
-        game_representation = perspective_to_llm_representation(
-            perspective, leader_move
-        )
+        game_representation = perspective_to_llm_representation(perspective, leader_move)
+        game_history = history_to_llm_representation(perspective.get_game_history())
 
         llm_output = llm_engine.generate(game_representation)
         while True:
@@ -38,9 +37,7 @@ class LLMBot(Bot):
             print(llm_output)
             # print()
 
-            ok, move, parse_err = parse_llm_output(
-                perspective.valid_moves(), llm_output
-            )
+            ok, move, parse_err = parse_llm_output(perspective.valid_moves(), llm_output)
             if ok:
                 break
 
@@ -48,9 +45,7 @@ class LLMBot(Bot):
             print("There was a parsing error:", parse_err)
             # print()
 
-            llm_output = llm_engine.generate(
-                game_representation, feedback=parse_err_to_llm_feedback(parse_err)
-            )
+            llm_output = llm_engine.generate(game_representation, feedback=parse_err_to_llm_feedback(parse_err))
 
         assert move is not None
         return move
@@ -65,21 +60,15 @@ def parse_err_to_llm_feedback(parse_err: ParseLLMOutputError) -> str:
     feedback_representation = "FEEDBACK: DURING YOUR LAST OUTPUT:"
 
     if parse_err == ParseLLMOutputError.NO_MOVE_MATCHES:
-        feedback_representation += (
-            "You have provided an incorrect move, please provide a correct one."
-        )
+        feedback_representation += "You have provided an incorrect move, please provide a correct one."
 
     if parse_err == ParseLLMOutputError.MORE_THAN_ONE_MOVE_MATCHES:
-        feedback_representation += (
-            "You have provided more than one move, please provide a only one move."
-        )
+        feedback_representation += "You have provided more than one move, please provide a only one move."
 
     return feedback_representation
 
 
-def parse_llm_output(
-    valid_moves: List[Move], llm_output: str
-) -> Tuple[bool, Optional[Move], Optional[ParseLLMOutputError]]:
+def parse_llm_output(valid_moves: List[Move], llm_output: str) -> Tuple[bool, Optional[Move], Optional[ParseLLMOutputError]]:
     matching_moves = []
 
     for move in valid_moves:
@@ -101,9 +90,7 @@ def perspective_to_llm_representation(
 ) -> str:
     representation = ""
 
-    history_representation = history_to_llm_representation(
-        perspective.get_game_history()
-    )
+    history_representation = history_to_llm_representation(perspective.get_game_history())
     representation += "GAME HISTORY:\n"
     representation += f"{history_representation}\n"
 
@@ -144,9 +131,7 @@ def perspective_to_llm_representation(
     return representation
 
 
-def history_to_llm_representation(
-    game_history: list[tuple[PlayerPerspective, Optional[Trick]]]
-) -> str:
+def history_to_llm_representation(game_history: list[tuple[PlayerPerspective, Optional[Trick]]]) -> str:
     history_representation = ""
     my_previous_score = 0
 
@@ -173,22 +158,14 @@ def history_to_llm_representation(
             my_move = trick.leader_move
             opponent_move = trick.follower_move
             history_representation += "You were the leader.\n"
-            history_representation += (
-                f"You played: {move_to_llm_representation(my_move)}\n"
-            )
-            history_representation += (
-                f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
-            )
+            history_representation += f"You played: {move_to_llm_representation(my_move)}\n"
+            history_representation += f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
         else:
             my_move = trick.follower_move
             opponent_move = trick.leader_move
             history_representation += "Your opponent was the leader.\n"
-            history_representation += (
-                f"You played: {move_to_llm_representation(my_move)}\n"
-            )
-            history_representation += (
-                f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
-            )
+            history_representation += f"You played: {move_to_llm_representation(my_move)}\n"
+            history_representation += f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
 
         if did_i_win_the_trick:
             history_representation += "You won this trick.\n"
