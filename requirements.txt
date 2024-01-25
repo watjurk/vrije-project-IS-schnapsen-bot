@@ -1,3 +1,7 @@
 schnapsen @ git+https://github.com/intelligent-systems-course/schnapsen@main
 requests==2.31.0
 click==8.1.*
+llama-index==0.9.37.post1
+pypdf==4.0.0
+transformers==4.37.1
+torch==2.1.*
