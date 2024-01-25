@@ -20,38 +20,25 @@ class LLMBot(Bot):
         perspective: PlayerPerspective,
         leader_move: Optional[Move],
     ) -> Move:
-        # print()
-        # print()
-        # print("---------- THE GAME VIEW FOR LLM -----")
-        # print(perspective_to_llm_representation(perspective, leader_move))
-        # print("---------- THE GAME VIEW FOR LLM -----")
-        # print()
-        # print()
-
         game_representation = perspective_to_llm_representation(perspective, leader_move)
-        game_representation_without_history = perspective_to_llm_representation(
-            perspective, leader_move, include_history=False
-        )
         game_history = history_to_llm_representation(perspective.get_game_history())
 
-        print(game_representation_without_history)
+        print(game_representation)
+        llm_output = llm_engine.llm_player(game_representation, game_history)
 
-        llm_output = llm_engine.generate(game_representation, game_representation_without_history, game_history)
         while True:
-            # print()
             print(llm_output)
-            # print()
-
             ok, move, parse_err = parse_llm_output(perspective.valid_moves(), llm_output)
             if ok:
                 break
 
-            # print()
-            print("There was a parsing error:", parse_err)
-            # print()
+            print("----")
+            print("THERE WAS A PARSING ERROR:", parse_err)
+            print("----")
 
-            llm_output = llm_engine.generate(
-                game_representation, game_representation_without_history, game_history,
+            llm_output = llm_engine.llm_player(
+                game_representation,
+                game_history,
                 feedback=parse_err_to_llm_feedback(parse_err),
             )
 
@@ -65,7 +52,7 @@ class ParseLLMOutputError(Enum):
 
 
 def parse_err_to_llm_feedback(parse_err: ParseLLMOutputError) -> str:
-    feedback_representation = "FEEDBACK: DURING YOUR LAST OUTPUT:"
+    feedback_representation = "DURING YOUR LAST OUTPUT:"
 
     if parse_err == ParseLLMOutputError.NO_MOVE_MATCHES:
         feedback_representation += (
@@ -101,16 +88,9 @@ def parse_llm_output(
 def perspective_to_llm_representation(
     perspective: PlayerPerspective,
     leader_move: Optional[Move],
-    include_history: bool = True,
 ) -> str:
     representation = ""
 
-    if include_history:
-        history_representation = history_to_llm_representation(perspective.get_game_history())
-        representation += "GAME HISTORY:\n"
-        representation += f"{history_representation}\n"
-
-    representation += "GAME STATE:\n"
     game_phase = ""
     if perspective.get_phase() == GamePhase.ONE:
         game_phase = "STAGE1"
