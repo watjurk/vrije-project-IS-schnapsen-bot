@@ -1,3 +1,3 @@
 schnapsen @ git+https://github.com/intelligent-systems-course/schnapsen@main
 requests==2.31.0
-click==8.1.7
+click==8.1.*
