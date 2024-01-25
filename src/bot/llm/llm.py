@@ -34,7 +34,9 @@ class LLMBot(Bot):
         )
         game_history = history_to_llm_representation(perspective.get_game_history())
 
-        llm_output = llm_engine.generate(game_representation)
+        print(game_representation_without_history)
+
+        llm_output = llm_engine.generate(game_representation, game_representation_without_history, game_history)
         while True:
             # print()
             print(llm_output)
@@ -49,7 +51,7 @@ class LLMBot(Bot):
             # print()
 
             llm_output = llm_engine.generate(
-                game_representation,
+                game_representation, game_representation_without_history, game_history,
                 feedback=parse_err_to_llm_feedback(parse_err),
             )
 

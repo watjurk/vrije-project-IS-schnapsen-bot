@@ -10,7 +10,7 @@ from bot import LLMBot
 
 
 @click.command()
-@click.option("-n", "--number", default=10, help="Number of games to play against each bot.")
+@click.option("-n", "--number", default=20, help="Number of games to play against each bot.")
 def run_tournament(number):
     number_of_games_against_each_bot = number
     engine = schnapsen.game.SchnapsenGamePlayEngine()

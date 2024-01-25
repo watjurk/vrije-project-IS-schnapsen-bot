@@ -3,19 +3,18 @@ from typing import Optional
 import requests
 from os import path
 
-MODEL_TYPE = "openhermes"  # Update this for your model
+MODEL_TYPE = "openhermes"  
 
 CURRENT_FOLDER = path.dirname(path.abspath(__file__))
-MODEL_TYPE = "openhermes"  # Update this for your model
 
 # read the master prompt from a file
-PLAYING_PROMPT = open(path.join(CURRENT_FOLDER, "playing_prompt.txt")).read()
+PLAYING_PROMPT = open(path.join(CURRENT_FOLDER, "playing_prompt_v3.txt")).read()
 
 # read the expert prompt from a file
-EXPERT_PROMPT = open(path.join(CURRENT_FOLDER, "expert_prompt.txt")).read()
+EXPERT_PROMPT = open(path.join(CURRENT_FOLDER, "expert_prompt_v3.txt")).read()
 
-def expert(history):
-    full_expert_prompt = EXPERT_PROMPT + history
+def expert(history, game_representation_without_history):
+    full_expert_prompt = EXPERT_PROMPT + "HISTORY:" + history + "GAME STATE:" + game_representation_without_history
     r = requests.post(
         "http://localhost:11434/api/generate",
         json={
@@ -40,16 +39,16 @@ def expert(history):
 
 
 
-def generate(game_representation: str, feedback: Optional[str] = None) -> str:
+def generate(game_representation, game_representation_without_history, game_history: str, feedback: Optional[str] = None) -> str:
 
     # LLM expert 
-    history = game_representation
+    history = game_history
 
-    expert_advice = expert(history)
+    expert_advice = expert(history, game_representation_without_history)
 
-
+    print(expert_advice)
     # LLM player
-    full_prompt = f"{PLAYING_PROMPT}\n\n{game_representation}\n\nExpert Advice:\n{expert_advice}"
+    full_prompt = f"{PLAYING_PROMPT}\n\n{game_representation_without_history}\n\nExpert Advice:\n{expert_advice}"
     if feedback is not None:
         full_prompt += f"\n\n{feedback}"
 
