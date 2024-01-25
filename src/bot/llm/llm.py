@@ -1,7 +1,8 @@
-from typing import Optional, List, Tuple
 from enum import Enum, auto
-from schnapsen.game import Bot, PlayerPerspective, Move, GamePhase, Trick
+from typing import List, Optional, Tuple
+
 from schnapsen.deck import Card
+from schnapsen.game import Bot, GamePhase, Move, PlayerPerspective, Trick
 
 from . import llm_engine
 

@@ -1,7 +1,8 @@
 import json
-from typing import Optional
-import requests
 from os import path
+from typing import Optional
+
+import requests
 
 MODEL_TYPE = "openhermes"
 
