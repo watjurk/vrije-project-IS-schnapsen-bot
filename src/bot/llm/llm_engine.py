@@ -5,8 +5,7 @@ from typing import Optional
 import requests
 from llama_index import ServiceContext, SimpleDirectoryReader, VectorStoreIndex
 
-#MODEL_TYPE = "mixtral:8x7b-instruct-v0.1-q5_0"
-MODEL_TYPE = "openhermes"
+MODEL_TYPE = "mixtral:8x7b-instruct-v0.1-q5_0"
 
 
 CURRENT_FOLDER = path.dirname(path.abspath(__file__))
