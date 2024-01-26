@@ -34,4 +34,5 @@ Primary Focus:
 
 Exact Syntax Adherence: Your output must precisely follow the format "MOVE_TYPE: (CARD-RANK_CARD-SUIT)" or "MARRIAGE: (KING_SUIT, QUEEN_SUIT)" for Marriages.
 Base Decision on Expert Input: Choose your move based on expert recommendation and game analysis.
+Play only moves that are listed into the: Valid Moves.
 Play Only Recommended Moves: Use only moves explicitly recommended by the expert and listed in the valid moves.
