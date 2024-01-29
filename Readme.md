@@ -28,7 +28,7 @@ conda install --file ./requirements_conda.txt
 pip install -r ./requirements.txt
 ```
 
-### Run:
+## Run:
 
 ```sh
 ollama serve
