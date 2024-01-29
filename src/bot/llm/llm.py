@@ -13,7 +13,9 @@ class LLMBot(Bot):
         name (Optional[str]): The optional name of this bot
     """
 
-    def __init__(self, name: Optional[str] = None) -> None:
+    def __init__(self, ollama_port, use_expert: bool = False, name: Optional[str] = None) -> None:
+        self.use_expert = use_expert
+        self.ollama_port = ollama_port
         super().__init__(name)
 
     def get_move(
@@ -24,22 +26,31 @@ class LLMBot(Bot):
         game_representation = perspective_to_llm_representation(perspective, leader_move)
         game_history = history_to_llm_representation(perspective.get_game_history())
 
-        print(game_representation)
-        llm_output = llm_engine.llm_player(game_representation, game_history)
+        llm_expert = None
+        if self.use_expert:
+            llm_expert = llm_engine.llm_expert(self.ollama_port, game_history, game_representation)
+
+        llm_output = llm_engine.llm_player(
+            self.ollama_port,
+            game_representation,
+            expert_advice=llm_expert,
+            use_expert=self.use_expert,
+        )
 
         while True:
-            print(llm_output)
             ok, move, parse_err = parse_llm_output(perspective.valid_moves(), llm_output)
             if ok:
                 break
 
-            print("----")
-            print("THERE WAS A PARSING ERROR:", parse_err)
-            print("----")
+            # print(llm_output)
+            # print(game_representation)
+            # print("THERE WAS A PARSING ERROR:", parse_err)
 
             llm_output = llm_engine.llm_player(
+                self.ollama_port,
                 game_representation,
-                game_history,
+                expert_advice=llm_expert,
+                use_expert=self.use_expert,
                 feedback=parse_err_to_llm_feedback(parse_err),
             )
 
@@ -53,7 +64,7 @@ class ParseLLMOutputError(Enum):
 
 
 def parse_err_to_llm_feedback(parse_err: ParseLLMOutputError) -> str:
-    feedback_representation = "DURING YOUR LAST OUTPUT:"
+    feedback_representation = "DURING YOUR LAST OUTPUT: "
 
     if parse_err == ParseLLMOutputError.NO_MOVE_MATCHES:
         feedback_representation += (

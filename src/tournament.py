@@ -4,7 +4,7 @@ import random
 import time
 
 import schnapsen.game
-import schnapsen.game
+import schnapsen.bots
 
 from bot import LLMBot
 
@@ -17,8 +17,10 @@ class GameStats:
 
 
 def run_tournament_against_bot(
+    ollama_port,
     csv_path: str,
     number_of_games: int,
+    use_expert: bool,
     opponent_bot: schnapsen.game.Bot,
 ) -> None:
     write_header = True
@@ -28,13 +30,11 @@ def run_tournament_against_bot(
     file = open(csv_path, "a")
     csv_writer = csv.writer(file)
     if write_header:
-        csv_writer.writerow(
-            ["did_our_bot_win", "opponent_bot_id", "game_points_obtained", "score_obtained"]
-        )
+        csv_writer.writerow(["did_our_bot_win", "game_points_obtained", "score_obtained"])
 
     engine = schnapsen.game.SchnapsenGamePlayEngine()
 
-    our_bot = LLMBot(name="llmbot")
+    our_bot = LLMBot(ollama_port, name="llmbot", use_expert=use_expert)
     opponent_bot_id = str(opponent_bot)
 
     print(f"-- playing {number_of_games} games against: {opponent_bot} --")
@@ -61,18 +61,17 @@ def run_tournament_against_bot(
 
         game_stats = GameStats()
         game_stats.did_our_bot_win = winner_bot is our_bot
-        game_stats.opponent_bot_id = opponent_bot_id
 
         game_stats.game_points_obtained = game_points
         game_stats.score_obtained = score.direct_points
         csv_writer.writerow(
             [
                 game_stats.did_our_bot_win,
-                game_stats.opponent_bot_id,
                 game_stats.game_points_obtained,
                 game_stats.score_obtained,
             ]
         )
+        file.flush()
 
         if winner_bot is our_bot:
             our_win_count += 1
