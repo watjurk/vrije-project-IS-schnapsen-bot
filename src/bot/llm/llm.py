@@ -23,33 +23,34 @@ class LLMBot(Bot):
         perspective: PlayerPerspective,
         leader_move: Optional[Move],
     ) -> Move:
+        # Serialize the game state and game history as string.
         game_representation = perspective_to_llm_representation(perspective, leader_move)
         game_history = history_to_llm_representation(perspective.get_game_history())
 
-        llm_expert = None
+        # If we are using expert, then get the expert's advice.
+        expert_advice = None
         if self.use_expert:
-            llm_expert = llm_engine.llm_expert(self.ollama_port, game_history, game_representation)
+            expert_advice = llm_engine.llm_expert(
+                self.ollama_port, game_history, game_representation
+            )
 
         llm_output = llm_engine.llm_player(
             self.ollama_port,
             game_representation,
-            expert_advice=llm_expert,
+            expert_advice=expert_advice,
             use_expert=self.use_expert,
         )
 
+        # Generate playing LLM's responses until there's no parsing error.
         while True:
             ok, move, parse_err = parse_llm_output(perspective.valid_moves(), llm_output)
             if ok:
                 break
 
-            # print(llm_output)
-            # print(game_representation)
-            # print("THERE WAS A PARSING ERROR:", parse_err)
-
             llm_output = llm_engine.llm_player(
                 self.ollama_port,
                 game_representation,
-                expert_advice=llm_expert,
+                expert_advice=expert_advice,
                 use_expert=self.use_expert,
                 feedback=parse_err_to_llm_feedback(parse_err),
             )
@@ -103,6 +104,7 @@ def perspective_to_llm_representation(
 ) -> str:
     representation = ""
 
+    # Serialize the game phase.
     game_phase = ""
     if perspective.get_phase() == GamePhase.ONE:
         game_phase = "STAGE1"
@@ -110,22 +112,26 @@ def perspective_to_llm_representation(
         game_phase = "STAGE2"
     representation += f"The game stage: {game_phase}\n"
 
+    # Serialize the trump suit and card.
     representation += f"The trump suit is: {str(perspective.get_trump_suit())}\n"
     if perspective.get_trump_card() is not None:
         representation += (
             f"The trump card is: {card_to_llm_representation(perspective.get_trump_card())}\n"
         )
 
+    # Serialize the cards that have been seen.
     seen_cards = ""
     for card in perspective.seen_cards(None):
         seen_cards += card_to_llm_representation(card) + " "
     representation += f"The cards which have been seen: {seen_cards}\n"
 
+    # Serialize the cards in our hand.
     your_cards = ""
     for card in perspective.get_hand().cards:
         your_cards += card_to_llm_representation(card) + " "
     representation += f"Your cards: {seen_cards}\n"
 
+    # Serialize the (possible) leader move.
     leader_move_representation = ""
     if leader_move == None:
         leader_move_representation = "You are the leader"
@@ -133,6 +139,7 @@ def perspective_to_llm_representation(
         leader_move_representation = f"Your opponent is the leader. Your opponent made this move: {move_to_llm_representation(leader_move)}"
     representation += f"{leader_move_representation}\n"
 
+    # Serialize the valid moves.
     valid_moves = ""
     for move in perspective.valid_moves():
         valid_moves += move_to_llm_representation(move) + " "
@@ -147,6 +154,7 @@ def history_to_llm_representation(
     history_representation = ""
     my_previous_score = 0
 
+    # Go backwards thought game history and serialize the corresponding states.
     for i, (perspective, trick) in enumerate(game_history):
         if trick is None:
             continue
@@ -156,16 +164,21 @@ def history_to_llm_representation(
         except:
             my_next_score = 0
 
+        # Theres no easy way to get the info weather we won the trick, that's why
+        # we are resoling back to comparing the scores.
         did_i_win_the_trick = False
         if my_next_score > my_previous_score:
             did_i_win_the_trick = True
         my_previous_score = my_next_score
 
         history_representation += "\n"
+
+        # Serialize trump exchange move.
         if trick.is_trump_exchange():
             history_representation += "TRUMP EXCHANGE"
             continue
 
+        # Serialize the trick.
         if perspective.am_i_leader():
             my_move = trick.leader_move
             opponent_move = trick.follower_move
@@ -183,6 +196,7 @@ def history_to_llm_representation(
                 f"Your opponent played: {move_to_llm_representation(opponent_move)}\n"
             )
 
+        # Serialize who won the trick.
         if did_i_win_the_trick:
             history_representation += "You won this trick.\n"
         else:

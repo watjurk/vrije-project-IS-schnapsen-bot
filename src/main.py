@@ -8,6 +8,7 @@ import schnapsen.bots
 from tournament import run_tournament_against_bot
 
 
+# Define the entrypoint command.
 @click.command()
 @click.option("number_of_games", "-n", "--number", default=20, help="Number of games to play.")
 @click.option("ollama_port", "-p", "--port", default=11434, help="Ollama's port")

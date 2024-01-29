@@ -6,7 +6,7 @@ import requests
 
 MODEL_TYPE = "openhermes"
 
-
+# Read prompts.
 CURRENT_FOLDER = path.dirname(path.abspath(__file__))
 PLAYING_PROMPT_EXPERT = open(path.join(CURRENT_FOLDER, "playing_prompt_expert.txt")).read()
 PLAYING_PROMPT_NO_EXPERT = open(path.join(CURRENT_FOLDER, "playing_prompt_no_expert.txt")).read()
@@ -16,6 +16,8 @@ EXPERT_PROMPT = open(path.join(CURRENT_FOLDER, "expert_prompt.txt")).read()
 
 def llm_expert(ollama_port, game_history: str, game_representation_without_history: str):
     full_expert_prompt = f"{EXPERT_PROMPT}\n\nHISTORY:\n{game_history}\n\nSTATE:\n{game_representation_without_history}"
+
+    # Call into the ollama API.
     return api_generate(ollama_port, full_expert_prompt)
 
 
@@ -39,6 +41,7 @@ def llm_player(
     if feedback is not None:
         full_prompt += f"\n\nFEEDBACK:\n{feedback}"
 
+    # Call into the ollama API.
     return api_generate(ollama_port, full_prompt)
 
 

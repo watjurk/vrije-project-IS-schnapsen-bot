@@ -34,14 +34,15 @@ def run_tournament_against_bot(
 
     engine = schnapsen.game.SchnapsenGamePlayEngine()
 
+    # Initialize the LLMBot.
     our_bot = LLMBot(ollama_port, name="llmbot", use_expert=use_expert)
-    opponent_bot_id = str(opponent_bot)
 
     print(f"-- playing {number_of_games} games against: {opponent_bot} --")
     our_win_count, opponent_win_count = 0, 0
     our_game_points, opponent_game_points = 0, 0
     our_score, opponent_score = 0, 0
 
+    # Run the tournament.
     for game_number in range(number_of_games):
         print(f"playing game number {game_number+1 :<2}: ", end="")
         is_our_bot_starting = game_number % 2 == 0
@@ -64,6 +65,8 @@ def run_tournament_against_bot(
 
         game_stats.game_points_obtained = game_points
         game_stats.score_obtained = score.direct_points
+        
+        # Write the data to the csv file.
         csv_writer.writerow(
             [
                 game_stats.did_our_bot_win,
